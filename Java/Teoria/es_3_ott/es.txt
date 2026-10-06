@@ -1,0 +1,7 @@
+Svolgi i seguenti esercizi:
+1. Dichiara un array con 6 temperature e stampa la somma e la media.
+2. Stampa gli elementi di un array dall'ultimo al primo, partendo dall'indice length − 1.
+3. Leggi 10 voti da tastiera e conta quanti sono maggiori o uguali a 6.
+4. Data una matrice 3×4, stampa la somma di ogni riga con due for annidati.
+
+https://classroom.google.com/c/NzEzNDcyNzg0ODg1/p/ODg4OTA2MjYwNDM2/details
