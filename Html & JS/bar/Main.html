@@ -5,12 +5,21 @@
         <script Language="JavaScript">
 
             var Ordini  = new Array();
+            var Varianti = [
+                { nome: "Classica", variazione: 0 },
+                { nome: "Formato piccolo", variazione: -0.2 },
+                { nome: "Formato grande", variazione: 0.5 },
+                { nome: "Ingrediente extra", variazione: 0.8 },
+                { nome: "Doppio ingrediente", variazione: 1.5 },
+                { nome: "Speciale", variazione: 2 }
+            ];
 
             function Ordine (myProdotto, myPrezzoUnitario, myQuantita, myNote) {
                 this.Prodotto = myProdotto;
                 this.PrezzoUnitario = myPrezzoUnitario;
                 this.Quantita = myQuantita; 
                 this.Note = myNote;
+                this.Variante = 0;
                 }
 
                 function CaricaDati() {
@@ -40,16 +49,39 @@
                     var cell2 = riga.insertCell(1);
                     var cell3 = riga.insertCell(2);
                     var cell4 = riga.insertCell(3);
+                    var cell5 = riga.insertCell(4);
+                    var cell6 = riga.insertCell(5);
                     
                     cell1.innerHTML= Ordini[i].Prodotto;
                     cell2.innerHTML= Ordini[i].PrezzoUnitario;
                     cell3.innerHTML= Ordini[i].Quantita;
                     cell3.innerHTML= "<input type='number' id='qta_" + i +"' value='0' oninput='AggiornaQuantita(" + i +")'>"
                     cell4.innerHTML = "<input type='Number' ID='totale_" + i + "' readonly>" //aggiunto il readonly 
-                    var cell5 = riga.insertCell(4);
-                    cell5.innerHTML = "<input type='text' ID='note_" + i + "' onchange='AggiornaNote(" + i +")'>";
+                    cell5.innerHTML = CreaMenuVarianti(i);
+                    cell6.innerHTML = "<input type='text' ID='note_" + i + "' onchange='AggiornaNote(" + i +")'>";
                     }
                 }
+
+            function CreaMenuVarianti(iRigo) {
+                var menu = "<select id='variante_" + iRigo + "' onchange='AggiornaVariante(" + iRigo + ")'>";
+
+                for (var i = 0; i < Varianti.length; i++) {
+                    var variazione = Varianti[i].variazione;
+                    var testoPrezzo = variazione > 0
+                        ? " +€" + variazione.toFixed(2).replace(".", ",")
+                        : variazione < 0
+                            ? " " + variazione.toFixed(2).replace(".", ",") + "€"
+                            : "";
+                    menu += "<option value='" + i + "'>" + Varianti[i].nome + testoPrezzo + "</option>";
+                }
+
+                return menu + "</select>";
+            }
+
+            function AggiornaVariante(iRigo) {
+                Ordini[iRigo].Variante = Number(document.getElementById("variante_" + iRigo).value);
+                AggiornaQuantita(iRigo);
+            }
 
             function AggiornaNote(iRigo) {
                 var note = document.getElementById("note_"+iRigo).value;
@@ -64,7 +96,7 @@
                 //INPUT
                 qta = document.getElementById("qta_"+iRigo).value;
                 
-                prezzo = Ordini[iRigo].PrezzoUnitario;
+                prezzo = Ordini[iRigo].PrezzoUnitario + Varianti[Ordini[iRigo].Variante].variazione;
                 
                 //ELABORAZIONE
                 if (qta >= 0) {
@@ -86,7 +118,8 @@
                 var totale = 0;
 
                 for (var i = 0; i < Ordini.length; i++) {
-                    totale += Number(Ordini[i].Quantita) * Ordini[i].PrezzoUnitario;
+                    totale += Number(Ordini[i].Quantita) *
+                        (Ordini[i].PrezzoUnitario + Varianti[Ordini[i].Variante].variazione);
                 }
 
                 return ("⠀" + totale.toFixed(2));
@@ -98,6 +131,7 @@
                 for (var i = 0; i < Ordini.length; i++) {
                     document.getElementById("qta_" + i).value = 0;
                     document.getElementById("totale_" + i).value = "";
+                    document.getElementById("variante_" + i).value = 0;
                     document.getElementById("note_" + i).value = "";
                 }
 
@@ -106,12 +140,18 @@
 
             function ApriScontrino() {
                 var quantita = [];
+                var varianti = [];
 
                 for (var i = 0; i < Ordini.length; i++) {
                     quantita.push(Number(document.getElementById("qta_" + i).value) || 0);
+                    varianti.push({
+                        nome: Varianti[Ordini[i].Variante].nome,
+                        variazione: Varianti[Ordini[i].Variante].variazione
+                    });
                 }
 
                 localStorage.setItem("quantitaScontrino", JSON.stringify(quantita));
+                localStorage.setItem("variantiScontrino", JSON.stringify(varianti));
                 window.open("Scontrino.html", "_blank");
             }
 
@@ -121,7 +161,7 @@
     <body onload="Inizializza()">
 
     <table border="1" id="elenco" cellpadding="6" cellspacing="0"  align="center">
-    <tr><td>PRODOTTO</td><td>Prezzo</td><td>Quantità</td><td>TOTALE</td><td>NOTE</td></tr>
+    <tr><td>PRODOTTO</td><td>Prezzo base</td><td>Quantità</td><td>TOTALE</td><td>VARIANTE</td><td>NOTE</td></tr>
     </table>
 
     <br>

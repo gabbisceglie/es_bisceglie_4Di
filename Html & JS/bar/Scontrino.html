@@ -17,9 +17,24 @@
             return "€ " + importo.toFixed(2).replace(".", ",");
         }
 
+        function descrizioneVariazione(variazione) {
+            if (variazione > 0) {
+                return "+ " + formatoEuro(variazione);
+            }
+
+            if (variazione < 0) {
+                return "- " + formatoEuro(Math.abs(variazione));
+            }
+
+            return "nessuna variazione";
+        }
+
         function caricaScontrino() {
             const quantitaSalvate = JSON.parse(
                 localStorage.getItem("quantitaScontrino") || "[]"
+            );
+            const variantiSalvate = JSON.parse(
+                localStorage.getItem("variantiScontrino") || "[]"
             );
             const righe = document.getElementById("righe-ordine");
             let totale = 0;
@@ -31,15 +46,47 @@
                     return;
                 }
 
-                const totaleRiga = quantita * prodotto.prezzo;
+                const varianteSalvata = variantiSalvate[indice];
+                const variante = varianteSalvata && typeof varianteSalvata === "object"
+                    ? varianteSalvata
+                    : {
+                        nome: "Classica",
+                        variazione: 0
+                    };
+                const variazione = Number(variante.variazione);
+                const variazioneSicura = Number.isFinite(variazione) ? variazione : 0;
+                const nomeVariante = variante.nome || "Classica";
+                const prezzoUnitario = prodotto.prezzo + variazioneSicura;
+                const totaleRiga = quantita * prezzoUnitario;
                 totale += totaleRiga;
 
                 const riga = document.createElement("tr");
-                riga.innerHTML =
-                    "<td>" + prodotto.nome + "</td>" +
-                    "<td align='right'>" + quantita + "</td>" +
-                    "<td align='right'>" + formatoEuro(prodotto.prezzo) + "</td>" +
-                    "<td align='right'>" + formatoEuro(totaleRiga) + "</td>";
+                const descrizione = document.createElement("td");
+                descrizione.textContent = prodotto.nome;
+
+                const dettaglioVariante = document.createElement("small");
+                dettaglioVariante.textContent =
+                    "Variante: " + nomeVariante +
+                    " (" + descrizioneVariazione(variazioneSicura) + ")";
+                descrizione.appendChild(document.createElement("br"));
+                descrizione.appendChild(dettaglioVariante);
+
+                const quantitaCella = document.createElement("td");
+                quantitaCella.textContent = quantita;
+                quantitaCella.align = "right";
+
+                const prezzoCella = document.createElement("td");
+                prezzoCella.textContent = formatoEuro(prezzoUnitario);
+                prezzoCella.align = "right";
+
+                const totaleCella = document.createElement("td");
+                totaleCella.textContent = formatoEuro(totaleRiga);
+                totaleCella.align = "right";
+
+                riga.appendChild(descrizione);
+                riga.appendChild(quantitaCella);
+                riga.appendChild(prezzoCella);
+                riga.appendChild(totaleCella);
                 righe.appendChild(riga);
             });
 
